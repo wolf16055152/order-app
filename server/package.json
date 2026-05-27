@@ -1,0 +1,28 @@
+{
+  "name": "order-app-server",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "db:create": "node scripts/create-db.mjs"
+  },
+  "keywords": [
+    "express",
+    "coffee-order"
+  ],
+  "author": "",
+  "license": "ISC",
+  "description": "Backend server for coffee order app",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "morgan": "^1.10.1",
+    "pg": "^8.21.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
