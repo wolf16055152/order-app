@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import './App.css'
 import OrderPage from './pages/OrderPage'
-import AdminPlaceholder from './pages/AdminPlaceholder'
+import AdminPage from './pages/AdminPage'
 
 function App() {
   const [activeTab, setActiveTab] = useState('order')
 
   if (activeTab === 'admin') {
     return (
-      <AdminPlaceholder activeTab={activeTab} onTabChange={setActiveTab} />
+      <AdminPage activeTab={activeTab} onTabChange={setActiveTab} />
     )
   }
 
