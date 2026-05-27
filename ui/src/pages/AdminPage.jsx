@@ -46,22 +46,26 @@ function AdminPage({
   ORDER_STATUS,
 }) {
   const summary = deriveSummary(orders, ORDER_STATUS)
+  const summaryCards = [
+    { label: '총 주문', value: summary.totalOrders },
+    { label: '주문 접수', value: summary.pendingCount },
+    { label: '제조 중', value: summary.inPreparationCount },
+    { label: '제조 완료', value: summary.completedCount },
+  ]
 
   return (
     <div className="app-shell admin-page">
       <Header activeTab={activeTab} onTabChange={onTabChange} />
       <main className="order-page__main admin-page__main">
         <section className="admin-section" aria-label="관리자 대시보드">
-          <h2 className="admin-section__title">관리자 대시보드</h2>
-          <p className="admin-dashboard__line">
-            <span>총 주문 {summary.totalOrders}</span>
-            <span className="admin-dashboard__dot">/</span>
-            <span>주문 접수 {summary.pendingCount}</span>
-            <span className="admin-dashboard__dot">/</span>
-            <span>제조 중 {summary.inPreparationCount}</span>
-            <span className="admin-dashboard__dot">/</span>
-            <span>제조 완료 {summary.completedCount}</span>
-          </p>
+          <div className="admin-summary-grid">
+            {summaryCards.map((card) => (
+              <article key={card.label} className="admin-summary-card">
+                <p className="admin-summary-card__label">{card.label}</p>
+                <p className="admin-summary-card__value">{card.value}</p>
+              </article>
+            ))}
+          </div>
         </section>
 
         <section className="admin-section" aria-label="재고 현황">
@@ -71,9 +75,10 @@ function AdminPage({
               const status = getInventoryStatus(it.stockQuantity)
               return (
                 <article key={it.menuItemId} className="admin-card">
-                  <h3 className="admin-card__name">{it.name}</h3>
-                  <p className="admin-card__stock">
-                    <strong>{it.stockQuantity}개</strong>
+                  <p className="admin-card__stockline">
+                    <strong className="admin-card__name">{it.name}</strong>
+                    <span className="admin-card__qty">{it.stockQuantity}</span>
+                    <span className="admin-card__unit">개</span>
                     <span
                       className={`admin-badge admin-badge--${status.tone}`}
                       aria-label={`상태: ${status.label}`}
@@ -124,23 +129,28 @@ function AdminPage({
                     const itemsSummary = buildItemsSummary(o.items)
                     return (
                       <li key={o.id} className="admin-order-row">
-                        <span className="admin-order-row__time">
-                          {formatOrderedAt(o.orderedAt)}
-                        </span>
-                        <span className="admin-order-row__items">
-                          {itemsSummary}
-                        </span>
+                        <div className="admin-order-row__left">
+                          <span className="admin-order-row__time">
+                            {formatOrderedAt(o.orderedAt)}
+                          </span>
+                          <span className="admin-order-row__items">
+                            {itemsSummary}
+                          </span>
+                        </div>
                         <span className="admin-order-row__amount">
                           {formatPrice(o.totalAmount)}
                         </span>
                         <span className="admin-order-row__action">
-                          {o.status === ORDER_STATUS.PENDING ? (
+                          {o.status === ORDER_STATUS.PENDING ||
+                          o.status === ORDER_STATUS.IN_PREPARATION ? (
                             <button
                               type="button"
-                              className="btn btn--primary"
+                              className="btn btn--primary admin-order-btn"
                               onClick={() => onAdvanceOrder(o.id)}
                             >
-                              제조시작
+                              {o.status === ORDER_STATUS.PENDING
+                                ? '제조 시작'
+                                : '제조 완료'}
                             </button>
                           ) : (
                             <span className="admin-status">

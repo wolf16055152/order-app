@@ -1,23 +1,6 @@
 import { formatPrice } from '../utils/formatPrice'
 import { formatCartItemName } from '../utils/cart'
 
-function CartIcon() {
-  return (
-    <svg
-      className="cart-panel__icon"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      aria-hidden="true"
-    >
-      <circle cx="9" cy="20" r="1.25" />
-      <circle cx="17" cy="20" r="1.25" />
-      <path d="M3 3h2l1.5 11h11l2-8H7" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
-
 function QuantityStepper({ quantity, onDecrease, onIncrease }) {
   return (
     <div className="cart-panel__stepper">
@@ -47,12 +30,9 @@ function QuantityStepper({ quantity, onDecrease, onIncrease }) {
 function CartItem({ line, onChangeQuantity }) {
   return (
     <li className="cart-panel__item">
-      <div className="cart-panel__item-detail">
-        <p className="cart-panel__item-name">{formatCartItemName(line)}</p>
-        <p className="cart-panel__item-price">{formatPrice(line.lineTotal)}</p>
-      </div>
+      <p className="cart-panel__item-name">{formatCartItemName(line)}</p>
+      <p className="cart-panel__item-price">{formatPrice(line.lineTotal)}</p>
       <div className="cart-panel__item-control">
-        <span className="cart-panel__qty-label">수량 {line.quantity}</span>
         <QuantityStepper
           quantity={line.quantity}
           onDecrease={() => onChangeQuantity(line.key, -1)}
@@ -74,10 +54,7 @@ function CartPanel({
 
   return (
     <section className="cart-panel" aria-label="장바구니">
-      <h2 className="cart-panel__title">
-        <CartIcon />
-        장바구니
-      </h2>
+      <h2 className="cart-panel__title">장바구니</h2>
       <div className="cart-panel__body">
         <div className="cart-panel__orders">
           <ul className="cart-panel__list">

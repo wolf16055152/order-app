@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "db:create": "node scripts/create-db.mjs"
+    "db:create": "node scripts/create-db.mjs",
+    "db:reset-dev-data": "node scripts/reset-dev-data.mjs"
   },
   "keywords": [
     "express",

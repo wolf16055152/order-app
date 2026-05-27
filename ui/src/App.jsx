@@ -1,8 +1,15 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import './App.css'
 import OrderPage from './pages/OrderPage'
 import AdminPage from './pages/AdminPage'
-import { MENUS } from './data/menus'
+import {
+  advanceOrderStatus,
+  createOrder,
+  fetchInventory,
+  fetchMenus,
+  fetchOrders,
+  updateInventory,
+} from './api/client'
 
 const ORDER_STATUS = {
   PENDING: 'PENDING',
@@ -12,61 +19,76 @@ const ORDER_STATUS = {
 
 function App() {
   const [activeTab, setActiveTab] = useState('order')
-
-  const inventoryMenus = useMemo(() => MENUS.slice(0, 3), [])
-  const [inventory, setInventory] = useState(() =>
-    inventoryMenus.map((m) => ({
-      menuItemId: m.id,
-      name: m.name,
-      stockQuantity: 10,
-    })),
-  )
-
+  const [menus, setMenus] = useState([])
+  const [inventory, setInventory] = useState([])
   const [orders, setOrders] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
 
-  function handleCreateOrderFromCart(cartLines, cartTotal) {
-    if (!cartLines || cartLines.length === 0) return
-    const now = new Date()
-    const id = `order-${now.getTime()}-${orders.length + 1}`
+  const reloadAll = useCallback(async () => {
+    const [menusData, ordersData, inventoryData] = await Promise.all([
+      fetchMenus(),
+      fetchOrders(),
+      fetchInventory(),
+    ])
+    setMenus(
+      menusData.map((menu) => ({
+        ...menu,
+        basePrice: menu.price,
+      })),
+    )
+    setOrders(ordersData)
+    setInventory(inventoryData.slice(0, 3))
+  }, [])
+
+  useEffect(() => {
+    async function load() {
+      try {
+        setLoading(true)
+        setLoadError('')
+        await reloadAll()
+      } catch (error) {
+        setLoadError(error.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [reloadAll])
+
+  async function handleCreateOrderFromCart(cartLines, cartTotal) {
     const items = cartLines.map((line) => ({
-      menuItemId: line.menuItemId,
-      menuName: line.menuName,
+      menuId: line.menuItemId,
       quantity: line.quantity,
+      optionIds: line.selectedOptionIds ?? [],
       unitPrice: line.unitPrice,
       lineTotal: line.lineTotal,
     }))
-    const newOrder = {
-      id,
-      orderedAt: now.toISOString(),
-      status: ORDER_STATUS.PENDING,
-      items,
-      totalAmount: cartTotal,
-    }
-    setOrders((prev) => [...prev, newOrder])
+    await createOrder(items, cartTotal)
+    await reloadAll()
   }
 
-  function handleChangeStock(menuItemId, delta) {
+  async function handleChangeStock(menuItemId, delta) {
+    const updated = await updateInventory(menuItemId, delta)
     setInventory((prev) =>
-      prev.map((it) => {
-        if (it.menuItemId !== menuItemId) return it
-        const next = Math.max(0, it.stockQuantity + delta)
-        return { ...it, stockQuantity: next }
-      }),
+      prev.map((it) => (it.menuItemId === menuItemId ? updated : it)),
     )
   }
 
-  function handleAdvanceOrder(orderId) {
-    setOrders((prev) =>
-      prev.map((o) => {
-        if (o.id !== orderId) return o
-        if (o.status === ORDER_STATUS.PENDING) {
-          return { ...o, status: ORDER_STATUS.IN_PREPARATION }
-        }
-        if (o.status === ORDER_STATUS.IN_PREPARATION) {
-          return { ...o, status: ORDER_STATUS.COMPLETED }
-        }
-        return o
-      }),
+  async function handleAdvanceOrder(orderId) {
+    const updated = await advanceOrderStatus(orderId)
+    setOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)))
+  }
+
+  if (loading) {
+    return <div className="app-shell order-page__main">불러오는 중...</div>
+  }
+
+  if (loadError) {
+    return (
+      <div className="app-shell order-page__main">
+        서버 데이터를 불러오지 못했습니다: {loadError}
+      </div>
     )
   }
 
@@ -89,6 +111,7 @@ function App() {
       activeTab={activeTab}
       onTabChange={setActiveTab}
       onCreateOrder={handleCreateOrderFromCart}
+      menus={menus}
     />
   )
 }

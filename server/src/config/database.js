@@ -2,7 +2,7 @@ import { Pool } from 'pg'
 
 let pool
 
-function getPool() {
+export function getPool() {
   if (pool) return pool
 
   const requiredEnv = ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASSWORD']
@@ -30,6 +30,11 @@ export async function verifyDbConnection() {
 export async function query(text, params = []) {
   const db = getPool()
   return db.query(text, params)
+}
+
+export async function getClient() {
+  const db = getPool()
+  return db.connect()
 }
 
 export default getPool
