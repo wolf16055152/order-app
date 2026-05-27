@@ -1,13 +1,5 @@
-import { useMemo, useState } from 'react'
 import Header from '../components/Header'
-import { MENUS } from '../data/menus'
 import { formatPrice } from '../utils/formatPrice'
-
-const ORDER_STATUS = {
-  PENDING: 'PENDING',
-  IN_PREPARATION: 'IN_PREPARATION',
-  COMPLETED: 'COMPLETED',
-}
 
 function pad2(n) {
   return String(n).padStart(2, '0')
@@ -30,7 +22,7 @@ function getInventoryStatus(stockQuantity) {
   return { label: '정상', tone: 'ok' }
 }
 
-function deriveSummary(orders) {
+function deriveSummary(orders, ORDER_STATUS) {
   const pendingCount = orders.filter((o) => o.status === ORDER_STATUS.PENDING).length
   const inPreparationCount = orders.filter(
     (o) => o.status === ORDER_STATUS.IN_PREPARATION,
@@ -44,55 +36,16 @@ function deriveSummary(orders) {
   }
 }
 
-function AdminPage({ activeTab, onTabChange }) {
-  const inventoryMenus = useMemo(() => MENUS.slice(0, 3), [])
-  const [inventory, setInventory] = useState(() =>
-    inventoryMenus.map((m) => ({
-      menuItemId: m.id,
-      name: m.name,
-      stockQuantity: 10,
-    })),
-  )
-
-  const [orders, setOrders] = useState(() => [
-    {
-      id: 'order-001',
-      orderedAt: new Date().toISOString(),
-      status: ORDER_STATUS.PENDING,
-      items: [
-        {
-          menuItemId: MENUS[0]?.id ?? 'americano-ice',
-          menuName: MENUS[0]?.name ?? '아메리카노(ICE)',
-          quantity: 1,
-          unitPrice: MENUS[0]?.basePrice ?? 4000,
-          lineTotal: MENUS[0]?.basePrice ?? 4000,
-        },
-      ],
-      totalAmount: MENUS[0]?.basePrice ?? 4000,
-    },
-  ])
-
-  const summary = deriveSummary(orders)
-
-  function changeStock(menuItemId, delta) {
-    setInventory((prev) =>
-      prev.map((it) => {
-        if (it.menuItemId !== menuItemId) return it
-        const next = Math.max(0, it.stockQuantity + delta)
-        return { ...it, stockQuantity: next }
-      }),
-    )
-  }
-
-  function startPreparation(orderId) {
-    setOrders((prev) =>
-      prev.map((o) =>
-        o.id === orderId && o.status === ORDER_STATUS.PENDING
-          ? { ...o, status: ORDER_STATUS.IN_PREPARATION }
-          : o,
-      ),
-    )
-  }
+function AdminPage({
+  activeTab,
+  onTabChange,
+  inventory,
+  orders,
+  onChangeStock,
+  onAdvanceOrder,
+  ORDER_STATUS,
+}) {
+  const summary = deriveSummary(orders, ORDER_STATUS)
 
   return (
     <div className="app-shell admin-page">
@@ -134,7 +87,7 @@ function AdminPage({ activeTab, onTabChange }) {
                       className="admin-icon-btn"
                       aria-label={`${it.name} 재고 감소`}
                       disabled={it.stockQuantity === 0}
-                      onClick={() => changeStock(it.menuItemId, -1)}
+                      onClick={() => onChangeStock(it.menuItemId, -1)}
                     >
                       −
                     </button>
@@ -142,7 +95,7 @@ function AdminPage({ activeTab, onTabChange }) {
                       type="button"
                       className="admin-icon-btn"
                       aria-label={`${it.name} 재고 증가`}
-                      onClick={() => changeStock(it.menuItemId, 1)}
+                      onClick={() => onChangeStock(it.menuItemId, 1)}
                     >
                       +
                     </button>
@@ -185,7 +138,7 @@ function AdminPage({ activeTab, onTabChange }) {
                             <button
                               type="button"
                               className="btn btn--primary"
-                              onClick={() => startPreparation(o.id)}
+                              onClick={() => onAdvanceOrder(o.id)}
                             >
                               제조시작
                             </button>

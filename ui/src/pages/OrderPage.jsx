@@ -10,7 +10,7 @@ import {
   updateCartLineQuantity,
 } from '../utils/cart'
 
-function OrderPage({ activeTab, onTabChange }) {
+function OrderPage({ activeTab, onTabChange, onCreateOrder }) {
   const [cartLines, setCartLines] = useState([])
   const [orderMessage, setOrderMessage] = useState('')
   const [orderSubmitting, setOrderSubmitting] = useState(false)
@@ -38,6 +38,7 @@ function OrderPage({ activeTab, onTabChange }) {
 
     try {
       await new Promise((resolve) => setTimeout(resolve, 400))
+      onCreateOrder?.(cartLines, cartTotal)
       setCartLines([])
       setOrderMessage('주문이 완료되었습니다. 감사합니다!')
     } catch {
