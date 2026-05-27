@@ -18,7 +18,20 @@ function MenuCard({ menu, onAddToCart }) {
 
   return (
     <article className="menu-card">
-      <div className="menu-card__image" aria-hidden="true" />
+      <div className="menu-card__image">
+        {menu.imageUrl ? (
+          <img
+            src={menu.imageUrl}
+            alt={menu.name}
+            className="menu-card__photo"
+            loading="lazy"
+          />
+        ) : (
+          <span className="menu-card__placeholder" aria-hidden="true">
+            ×
+          </span>
+        )}
+      </div>
       <div className="menu-card__body">
         <h2 className="menu-card__name">{menu.name}</h2>
         <p className="menu-card__price">{formatPrice(menu.basePrice)}</p>

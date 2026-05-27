@@ -6,7 +6,7 @@ const seedMenus = [
     name: '아메리카노(ICE)',
     description: '시원하고 깔끔한 아이스 아메리카노',
     price: 4000,
-    imageUrl: '/images/americano-ice.png',
+    imageUrl: '/images/americano-ice.jpg',
     stockQuantity: 10,
   },
   {
@@ -14,7 +14,7 @@ const seedMenus = [
     name: '아메리카노(HOT)',
     description: '진한 에스프레소의 깊은 맛',
     price: 4000,
-    imageUrl: '/images/americano-hot.png',
+    imageUrl: '/images/americano-hot.jpg',
     stockQuantity: 10,
   },
   {
@@ -22,7 +22,7 @@ const seedMenus = [
     name: '카페라떼',
     description: '부드러운 우유와 에스프레소의 조화',
     price: 5000,
-    imageUrl: '/images/cafe-latte.png',
+    imageUrl: '/images/caffe-latte.jpg',
     stockQuantity: 10,
   },
   {
