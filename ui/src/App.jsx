@@ -17,6 +17,7 @@ const ORDER_STATUS = {
   IN_PREPARATION: 'IN_PREPARATION',
   COMPLETED: 'COMPLETED',
 }
+const INITIAL_LOAD_TIMEOUT_MS = 3000
 
 function buildOfflineMenus() {
   return MENUS.slice(0, 3).map((menu) => ({
@@ -49,7 +50,6 @@ function App() {
   const [inventory, setInventory] = useState([])
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
-  const [loadError, setLoadError] = useState('')
   const [offlineMode, setOfflineMode] = useState(false)
 
   const applyOfflineFallback = useCallback(() => {
@@ -95,19 +95,40 @@ function App() {
   }, [reloadAll])
 
   useEffect(() => {
+    let isCancelled = false
+    let fallbackTimerId = null
+    let hasShownFallback = false
+
     async function load() {
       try {
         setLoading(true)
-        setLoadError('')
+        fallbackTimerId = setTimeout(() => {
+          if (isCancelled || hasShownFallback) return
+          hasShownFallback = true
+          applyOfflineFallback()
+          setLoading(false)
+        }, INITIAL_LOAD_TIMEOUT_MS)
+
         await loadWithRetry()
-      } catch (error) {
-        setLoadError('')
+      } catch {
+        if (isCancelled || hasShownFallback) return
+        hasShownFallback = true
         applyOfflineFallback()
-      } finally {
         setLoading(false)
+        return
       }
+
+      if (isCancelled) return
+      clearTimeout(fallbackTimerId)
+      setLoading(false)
     }
+
     load()
+
+    return () => {
+      isCancelled = true
+      clearTimeout(fallbackTimerId)
+    }
   }, [applyOfflineFallback, loadWithRetry])
 
   useEffect(() => {
@@ -201,14 +222,6 @@ function App() {
 
   if (loading) {
     return <div className="app-shell order-page__main">불러오는 중...</div>
-  }
-
-  if (loadError) {
-    return (
-      <div className="app-shell order-page__main">
-        서버 데이터를 불러오지 못했습니다: {loadError}
-      </div>
-    )
   }
 
   if (activeTab === 'admin') {
