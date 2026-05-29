@@ -18,6 +18,8 @@
   display: flex;
   justify-content: center;
   min-height: 100vh;
+  flex-direction: column;
+  align-items: center;
 }
 
 .app-shell {
@@ -27,6 +29,17 @@
   background: #ffffff;
   border-left: 1px solid #e4e9f2;
   border-right: 1px solid #e4e9f2;
+}
+
+.offline-banner {
+  width: 100%;
+  max-width: var(--app-max-width);
+  padding: 0.55rem 1rem;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #9a3412;
+  font-size: 0.8rem;
+  text-align: center;
 }
 
 .order-page__main {

@@ -54,13 +54,27 @@ function getApiBaseCandidates() {
 
 const API_BASE_CANDIDATES = getApiBaseCandidates()
 let activeApiBaseUrl = API_BASE_CANDIDATES[0]
+const REQUEST_TIMEOUT_MS = 8000
+
+async function fetchWithTimeout(url, options) {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+  try {
+    return await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    })
+  } finally {
+    clearTimeout(timeoutId)
+  }
+}
 
 async function request(path, options = {}) {
   let lastError = null
 
   for (const baseUrl of API_BASE_CANDIDATES) {
     try {
-      const response = await fetch(`${baseUrl}${path}`, {
+      const response = await fetchWithTimeout(`${baseUrl}${path}`, {
         headers: { 'Content-Type': 'application/json' },
         ...options,
       })
