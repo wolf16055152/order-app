@@ -39,6 +39,10 @@ function getNextOrderStatus(status) {
   return status
 }
 
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 function App() {
   const [activeTab, setActiveTab] = useState('order')
   const [menus, setMenus] = useState([])
@@ -76,12 +80,29 @@ function App() {
     setOfflineReason('')
   }, [])
 
+  const loadWithRetry = useCallback(async () => {
+    const attempts = 3
+    let lastError = null
+    for (let i = 0; i < attempts; i += 1) {
+      try {
+        await reloadAll()
+        return
+      } catch (error) {
+        lastError = error
+        if (i < attempts - 1) {
+          await wait(2000)
+        }
+      }
+    }
+    throw lastError || new Error('서버 연결에 실패했습니다.')
+  }, [reloadAll])
+
   useEffect(() => {
     async function load() {
       try {
         setLoading(true)
         setLoadError('')
-        await reloadAll()
+        await loadWithRetry()
       } catch (error) {
         setLoadError('')
         applyOfflineFallback(error.message)
@@ -90,7 +111,19 @@ function App() {
       }
     }
     load()
-  }, [applyOfflineFallback, reloadAll])
+  }, [applyOfflineFallback, loadWithRetry])
+
+  useEffect(() => {
+    if (!offlineMode) return
+    const timerId = setInterval(async () => {
+      try {
+        await reloadAll()
+      } catch {
+        // keep offline mode until server recovers
+      }
+    }, 15000)
+    return () => clearInterval(timerId)
+  }, [offlineMode, reloadAll])
 
   async function handleCreateOrderFromCart(cartLines, cartTotal) {
     if (offlineMode) {

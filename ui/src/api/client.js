@@ -54,7 +54,7 @@ function getApiBaseCandidates() {
 
 const API_BASE_CANDIDATES = getApiBaseCandidates()
 let activeApiBaseUrl = API_BASE_CANDIDATES[0]
-const REQUEST_TIMEOUT_MS = 8000
+const REQUEST_TIMEOUT_MS = 45000
 
 async function fetchWithTimeout(url, options) {
   const controller = new AbortController()
@@ -101,8 +101,14 @@ async function request(path, options = {}) {
       return payload
     } catch (error) {
       lastError = error
+      if (error?.name === 'AbortError') {
+        const timeoutError = new Error('서버 응답이 지연되고 있습니다.')
+        timeoutError.status = 504
+        lastError = timeoutError
+      }
       const isNetworkError = error instanceof TypeError
-      if (!isNetworkError) {
+      const isTimeoutError = error?.name === 'AbortError'
+      if (!isNetworkError && !isTimeoutError) {
         throw error
       }
     }
