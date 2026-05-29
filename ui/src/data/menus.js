@@ -9,7 +9,7 @@ export const MENUS = [
     name: '아메리카노(ICE)',
     basePrice: 4000,
     description: '시원하고 깔끔한 아이스 아메리카노',
-    imageUrl: '/images/americano-ice.png',
+    imageUrl: '/images/americano-ice.jpg',
     options: DEFAULT_OPTIONS,
   },
   {
@@ -17,7 +17,7 @@ export const MENUS = [
     name: '아메리카노(HOT)',
     basePrice: 4000,
     description: '진한 에스프레소의 깊은 맛',
-    imageUrl: '/images/americano-hot.png',
+    imageUrl: '/images/americano-hot.jpg',
     options: DEFAULT_OPTIONS,
   },
   {
@@ -25,7 +25,7 @@ export const MENUS = [
     name: '카페라떼',
     basePrice: 5000,
     description: '부드러운 우유와 에스프레소의 조화',
-    imageUrl: '/images/cafe-latte.png',
+    imageUrl: '/images/caffe-latte.jpg',
     options: DEFAULT_OPTIONS,
   },
   {
