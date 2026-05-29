@@ -51,15 +51,13 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
   const [offlineMode, setOfflineMode] = useState(false)
-  const [offlineReason, setOfflineReason] = useState('')
 
-  const applyOfflineFallback = useCallback((reason = '') => {
+  const applyOfflineFallback = useCallback(() => {
     const offlineMenus = buildOfflineMenus()
     setMenus(offlineMenus)
     setInventory(buildOfflineInventory(offlineMenus))
     setOrders([])
     setOfflineMode(true)
-    setOfflineReason(reason)
   }, [])
 
   const reloadAll = useCallback(async () => {
@@ -77,7 +75,6 @@ function App() {
     setOrders(ordersData)
     setInventory(inventoryData.slice(0, 3))
     setOfflineMode(false)
-    setOfflineReason('')
   }, [])
 
   const loadWithRetry = useCallback(async () => {
@@ -105,7 +102,7 @@ function App() {
         await loadWithRetry()
       } catch (error) {
         setLoadError('')
-        applyOfflineFallback(error.message)
+        applyOfflineFallback()
       } finally {
         setLoading(false)
       }
@@ -214,40 +211,27 @@ function App() {
     )
   }
 
-  const offlineBanner = offlineMode ? (
-    <div className="offline-banner">
-      서버 연결이 불안정하여 임시 모드로 실행 중입니다.
-      {offlineReason ? ` (${offlineReason})` : ''}
-    </div>
-  ) : null
-
   if (activeTab === 'admin') {
     return (
-      <>
-        {offlineBanner}
-        <AdminPage
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          inventory={inventory}
-          orders={orders}
-          onChangeStock={handleChangeStock}
-          onAdvanceOrder={handleAdvanceOrder}
-          ORDER_STATUS={ORDER_STATUS}
-        />
-      </>
+      <AdminPage
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        inventory={inventory}
+        orders={orders}
+        onChangeStock={handleChangeStock}
+        onAdvanceOrder={handleAdvanceOrder}
+        ORDER_STATUS={ORDER_STATUS}
+      />
     )
   }
 
   return (
-    <>
-      {offlineBanner}
-      <OrderPage
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        onCreateOrder={handleCreateOrderFromCart}
-        menus={menus}
-      />
-    </>
+    <OrderPage
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
+      onCreateOrder={handleCreateOrderFromCart}
+      menus={menus}
+    />
   )
 }
 
