@@ -12,10 +12,22 @@ dotenv.config()
 
 const app = express()
 const PORT = process.env.PORT || 4000
+const DB_RETRY_MS = Number(process.env.DB_RETRY_MS || 10000)
+let dbReady = false
 
 app.use(cors())
 app.use(express.json())
 app.use(morgan('dev'))
+
+app.use('/api', (req, res, next) => {
+  if (!dbReady) {
+    res.status(503).json({
+      message: '데이터베이스를 준비 중입니다. 잠시 후 다시 시도해 주세요.',
+    })
+    return
+  }
+  next()
+})
 
 app.use('/api/menus', menusRouter)
 app.use('/api/orders', ordersRouter)
@@ -25,6 +37,7 @@ app.get('/health', (req, res) => {
   res.status(200).json({
     ok: true,
     message: 'Order app server is running',
+    databaseReady: dbReady,
     timestamp: new Date().toISOString(),
   })
 })
@@ -38,6 +51,14 @@ app.get('/', (req, res) => {
 })
 
 app.get('/health/db', async (req, res) => {
+  if (!dbReady) {
+    res.status(503).json({
+      ok: false,
+      message: 'Database is not ready yet',
+    })
+    return
+  }
+
   try {
     const result = await query('SELECT NOW() AS now')
     res.status(200).json({
@@ -69,15 +90,38 @@ app.use((err, req, res, next) => {
 // - PATCH /orders/:orderId/status
 // - PATCH /inventory/:menuItemId
 
-async function startServer() {
-  try {
-    await verifyDbConnection()
-    console.log('Database connected')
-    await initDb()
-    console.log('Database schema initialized')
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
 
+async function initializeDatabaseWithRetry() {
+  let attempt = 0
+  while (!dbReady) {
+    attempt += 1
+    try {
+      await verifyDbConnection()
+      console.log('Database connected')
+      await initDb()
+      console.log('Database schema initialized')
+      dbReady = true
+      return
+    } catch (error) {
+      console.error(
+        `Database initialization failed (attempt ${attempt}):`,
+        error.message,
+      )
+      await sleep(DB_RETRY_MS)
+    }
+  }
+}
+
+function startServer() {
+  try {
     app.listen(PORT, () => {
       console.log(`Server listening on http://localhost:${PORT}`)
+      initializeDatabaseWithRetry().catch((error) => {
+        console.error('Unexpected database retry loop failure:', error.message)
+      })
     })
   } catch (error) {
     console.error('Failed to start server:', error.message)
